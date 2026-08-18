@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../config/firebaseconfig';
 
 // MUI Components
@@ -19,6 +19,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import Navbar from "./Navbar";
 
@@ -163,25 +164,22 @@ export default function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
 
-      // 2. Set the display name on the Firebase user object
-      await updateProfile(user, {
-        displayName: name.trim(),
-      });
+      // 2. Set display name & store user record in Firestore concurrently
+      await Promise.all([
+        updateProfile(user, { displayName: name.trim() }),
+        setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: name.trim(),
+          email: email.trim(),
+          createdAt: serverTimestamp(),
+        })
+      ]);
 
-      // 3. Store user record in Firestore using UID as document ID
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name: name.trim(),
-        email: email.trim(),
-        createdAt: Timestamp.now(),
-      });
-
-      // 4. Redirect to products page
+      // 3. Redirect to products page
       navigate('/products');
     } catch (error) {
       console.error("Register Error:", error);
 
-      // User-friendly error messages based on Firebase error codes
       if (error.code === 'auth/email-already-in-use') {
         setAuthError('An account with this email address already exists.');
       } else if (error.code === 'auth/invalid-email') {
@@ -217,7 +215,7 @@ export default function SignUpPage() {
       >
         <Card sx={{ width: '100%', maxWidth: 460 }}>
           <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-            <Stack alignItems="center" sx={{ mb: 1 }}>
+            <Stack sx={{ mb: 1, alignItems: "center" }}>
               <UserPlusIcon />
               <Typography variant="h4" component="h1" sx={{ mb: 0.5 }}>
                 Create your account
@@ -227,7 +225,6 @@ export default function SignUpPage() {
               </Typography>
             </Stack>
 
-            {/* Display Firebase API Errors */}
             {authError && (
               <Alert severity="error" sx={{ mt: 2, mb: 1 }}>
                 {authError}
@@ -255,9 +252,7 @@ export default function SignUpPage() {
                   }}
                   error={Boolean(errors.name)}
                   helperText={errors.name}
-                  slotProps={{
-                    htmlInput: { 'aria-label': 'Full name' },
-                  }}
+                  inputProps={{ 'aria-label': 'Full name' }}
                 />
 
                 {/* ---- Email ---- */}
@@ -273,9 +268,7 @@ export default function SignUpPage() {
                   }}
                   error={Boolean(errors.email)}
                   helperText={errors.email}
-                  slotProps={{
-                    htmlInput: { 'aria-label': 'Email address' },
-                  }}
+                  inputProps={{ 'aria-label': 'Email address' }}
                 />
 
                 {/* ---- Password ---- */}
@@ -297,22 +290,20 @@ export default function SignUpPage() {
                   }}
                   error={Boolean(errors.password)}
                   helperText={errors.password}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                            onClick={() => setShowPassword((p) => !p)}
-                            edge="end"
-                            size="small"
-                          >
-                            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                    htmlInput: { 'aria-label': 'Password' },
+                  inputProps={{ 'aria-label': 'Password' }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          onClick={() => setShowPassword((p) => !p)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
                 />
 
@@ -329,26 +320,24 @@ export default function SignUpPage() {
                   }}
                   error={Boolean(errors.confirmPassword)}
                   helperText={errors.confirmPassword}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label={
-                              showConfirmPassword
-                                ? 'Hide confirm password'
-                                : 'Show confirm password'
-                            }
-                            onClick={() => setShowConfirmPassword((p) => !p)}
-                            edge="end"
-                            size="small"
-                          >
-                            {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                    htmlInput: { 'aria-label': 'Confirm password' },
+                  inputProps={{ 'aria-label': 'Confirm password' }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label={
+                            showConfirmPassword
+                              ? 'Hide confirm password'
+                              : 'Show confirm password'
+                          }
+                          onClick={() => setShowConfirmPassword((p) => !p)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
                 />
               </Stack>
@@ -407,11 +396,10 @@ export default function SignUpPage() {
                 variant="contained"
                 fullWidth
                 size="large"
-                loading={loading}
                 disabled={loading}
                 sx={{ py: 1.5, fontSize: '1rem' }}
               >
-                Sign up
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign up'}
               </Button>
 
               <Divider sx={{ my: 3 }}>
@@ -420,7 +408,7 @@ export default function SignUpPage() {
                 </Typography>
               </Divider>
 
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
                 Already have an account?{' '}
                 <Link
                   component={RouterLink}

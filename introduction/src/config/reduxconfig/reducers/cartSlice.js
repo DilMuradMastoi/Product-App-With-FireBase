@@ -1,64 +1,54 @@
-import { createSlice } from "@reduxjs/toolkit";
-
-const initialState = [];
+import { createSlice } from '@reduxjs/toolkit';
 
 const cartSlice = createSlice({
-  name: "cart",
-  initialState,
+  name: 'cart',
+  initialState: {
+    items: [],
+  },
   reducers: {
-    // Load cart from Firestore
-    setCart: (state, action) => {
-      return action.payload;
-    },
-
-    // Clear cart on logout
-    clearCart: () => {
-      return [];
-    },
-
     addToCart: (state, action) => {
-      const exist = state.find((item) => item.id === action.payload.id);
-
-      if (exist) {
-        exist.quantity += 1;
-      } else {
-        state.push({
-          ...action.payload,
-          quantity: 1,
-        });
-      }
+      state.items.push(action.payload);
     },
-
-    increaseQty: (state, action) => {
-      const item = state.find((i) => i.id === action.payload);
-      if (item) item.quantity++;
-    },
-
     decreaseQty: (state, action) => {
-      const item = state.find((i) => i.id === action.payload);
-
-      if (!item) return;
-
-      if (item.quantity > 1) {
-        item.quantity--;
-      } else {
-        return state.filter((i) => i.id !== action.payload);
-      }
+  // Support both object payload ({ id: 1 }) and string/number ID payload (1)
+  const id = action.payload?.id ?? action.payload;
+  const item = state.items.find((i) => i.id === id);
+  if (item) {
+    if (item.quantity > 1) {
+      item.quantity -= 1;
+    } else {
+      state.items = state.items.filter((i) => i.id !== id);
+    }
+  }
+},
+increaseQty: (state, action) => {
+  const id = action.payload?.id ?? action.payload;
+  const item = state.items.find((i) => i.id === id);
+  if (item) {
+    item.quantity += 1;
+  }
+},
+removeFromCart: (state, action) => {
+  const id = action.payload?.id ?? action.payload;
+  state.items = state.items.filter((i) => i.id !== id);
+},
+    clearCart: (state) => {
+      state.items = [];
     },
-
-    removeFromCart: (state, action) => {
-      return state.filter((item) => item.id !== action.payload);
+    setCart: (state, action) => {
+      state.items = action.payload;
     },
   },
 });
 
-export const {
-  setCart,
-  clearCart,
-  addToCart,
-  increaseQty,
-  decreaseQty,
-  removeFromCart,
+// 2. Exported here
+export const { 
+  addToCart, 
+  increaseQty, 
+  decreaseQty, 
+  removeFromCart, 
+  clearCart, 
+  setCart 
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

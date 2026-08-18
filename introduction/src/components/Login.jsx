@@ -186,7 +186,7 @@ export default function SignInPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-            <Stack alignItems="center" sx={{ mb: 1 }}>
+            <Stack style={{ alignItems: 'center' }}>
               <LockIcon />
               <Typography variant="h4" component="h1" sx={{ mb: 0.5 }}>
                 Welcome back
@@ -256,10 +256,14 @@ export default function SignInPage() {
               </Stack>
 
               <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ mt: 1, mb: 3 }}
+              style={{
+                display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: '8px',
+    marginBottom: '24px',
+              }}  
               >
                 <FormControlLabel
                   control={
@@ -304,7 +308,10 @@ export default function SignInPage() {
                 </Typography>
               </Divider>
 
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography   variant="body2"
+  
+  sx={{ mt: 2 , color:"text.secondary",
+  textAlign:"center",  }}>
                 Don&apos;t have an account?{' '}
                 <Link
                   component={RouterLink}

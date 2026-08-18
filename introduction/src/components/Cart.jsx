@@ -5,7 +5,7 @@ import {
   increaseQty,
   decreaseQty,
   removeFromCart,
-  clearCart, // 1. Import clearCart action
+  clearCart,
 } from "../config/reduxconfig/reducers/cartSlice";
 
 import Navbar from "./Navbar";
@@ -28,25 +28,26 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 const Cart = () => {
-  const cart = useSelector((state) => state.cart);
   const dispatch = useDispatch();
 
-  const grandTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+  // 1. Get cart items array safely from Redux
+  const cartItems = useSelector((state) => state.cart?.items) || [];
+
+  // 2. Calculate grandTotal using cartItems
+  const grandTotal = cartItems.reduce(
+    (total, item) => total + (item.price || 0) * (item.quantity || 1),
     0
   );
 
-  // 2. Checkout Handler
+  // 3. Checkout Handler
   const handleCheckout = () => {
-    // Show confirmation alert (optional)
     alert("Order placed successfully!");
-
-    // Clears Redux store -> useCartSync automatically updates Firestore to empty items
+    // Clears Redux store -> Sync automatically updates Firestore to empty items
     dispatch(clearCart());
   };
 
-  // Empty Cart
-  if (cart.length === 0) {
+  // 4. Empty Cart Screen
+  if (cartItems.length === 0) {
     return (
       <>
         <Navbar />
@@ -87,10 +88,10 @@ const Cart = () => {
     );
   }
 
+  // 5. Cart with Items Screen
   return (
     <>
-      <Navbar />
-
+      <Navbar/>
       <Box
         sx={{
           maxWidth: 1200,
@@ -99,20 +100,22 @@ const Cart = () => {
         }}
       >
         <Typography
-          variant="h3"
-          textAlign="center"
-          fontWeight="bold"
-          mb={4}
+         variant="h3"
+  sx={{
+    textAlign: 'center',
+    fontWeight: 'bold',
+    mb: 4,
+  }}
         >
           Shopping Cart
         </Typography>
 
-        {cart.map((item) => {
-          const itemTotal = item.price * item.quantity;
+        {cartItems.map((item) => {
+          const itemTotal = (item.price || 0) * (item.quantity || 1);
 
           return (
             <Card
-              key={item.id}
+              key={item.id}  
               sx={{
                 mb: 3,
                 borderRadius: 5,
@@ -125,87 +128,88 @@ const Cart = () => {
               }}
             >
               <CardContent>
-  <Stack
-    direction={{
-      xs: "column",
-      md: "row",
-    }}
-    spacing={3}
-    alignItems="center"
-    justifyContent="space-between" // Distributes items evenly horizontally on wide screens
-  >
-    <Avatar
-      src={item.thumbnail || item.image}
-      alt={item.title}
-      variant="rounded"
-      sx={{
-        width: 120,
-        height: 120,
-      }}
-    />
+                <Stack
+                  direction={{
+                    xs: "column",
+                    md: "row",
+                  }}
+                  spacing={3}
+                 sx={{
+                   alignItems:"center",
+                  justifyContent:"space-between"
+                 }}
+                >
+                  <Avatar
+                    src={item.thumbnail || item.image}
+                    alt={item.title}
+                    variant="rounded"
+                    sx={{
+                      width: 120,
+                      height: 120,
+                    }}
+                  />
 
-    <Box flex={1} sx={{ textAlign: { xs: "center", md: "left" } }}>
-      <Typography variant="h5" fontWeight="bold">
-        {item.title}
-      </Typography>
+                  <Box flex={1} sx={{ textAlign: { xs: "center", md: "left" } }}>
+                    <Typography variant="h5" fontWeight="bold">
+                      {item.title}
+                    </Typography>
 
-      <Typography mt={1}>
-        Price: <b>${item.price}</b>
-      </Typography>
+                    <Typography mt={1}>
+                      Price: <b>${item.price}</b>
+                    </Typography>
 
-      <Typography mt={1}>
-        Quantity: <b>{item.quantity}</b>
-      </Typography>
+                    <Typography mt={1}>
+                      Quantity: <b>{item.quantity}</b>
+                    </Typography>
 
-      <Typography
-        mt={1}
-        color="primary"
-        fontWeight="bold"
-      >
-        Total: ${itemTotal.toFixed(2)}
-      </Typography>
-    </Box>
+                    <Typography
+                      mt={1}
+                      color="primary"
+                      fontWeight="bold"
+                    >
+                      Total: ${itemTotal.toFixed(2)}
+                    </Typography>
+                  </Box>
 
-    {/* Quantity Controls */}
-    <Stack
-      direction="row"
-      alignItems="center"
-      justifyContent="center"
-      spacing={1}
-    >
-      <IconButton
-        color="error"
-        onClick={() => dispatch(decreaseQty(item.id))}
-      >
-        <RemoveIcon />
-      </IconButton>
+                  {/* Quantity Controls */}
+                  <Stack
+                   direction="row"
+  spacing={1}
+  sx={{ alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <IconButton
+                      color="error"
+                      onClick={() => dispatch(decreaseQty(item))}
+                    >
+                      <RemoveIcon />
+                    </IconButton>
 
-      <Typography variant="h6">{item.quantity}</Typography>
+                    <Typography variant="h6">{item.quantity}</Typography>
 
-      <IconButton
-        color="success"
-        onClick={() => dispatch(increaseQty(item.id))}
-      >
-        <AddIcon />
-      </IconButton>
-    </Stack>
+                    <IconButton
+                      color="success"
+                      onClick={() => dispatch(increaseQty(item))}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Stack>
 
-    {/* Remove Button */}
-    <Button
-      color="error"
-      variant="contained"
-      startIcon={<DeleteIcon />}
-      onClick={() => dispatch(removeFromCart(item.id))}
-      sx={{
-        alignSelf: "center", // Keeps it centered inside the parent stack
-        px: 3,
-        py: 1,
-      }}
-    >
-      Remove
-    </Button>
-  </Stack>
-</CardContent>
+                  {/* Remove Button */}
+                  <Button
+                    color="error"
+                    variant="contained"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => dispatch(removeFromCart(item))}
+                    sx={{
+                      alignSelf: "center",
+                      px: 3,
+                      py: 1,
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </Stack>
+              </CardContent>
             </Card>
           );
         })}
@@ -237,7 +241,7 @@ const Cart = () => {
           <Button
             variant="contained"
             size="large"
-            onClick={handleCheckout} // 3. Attached click handler here
+            onClick={handleCheckout}
             sx={{
               mt: 3,
               bgcolor: "#fff",

@@ -109,7 +109,7 @@ export default function Products() {
     return (
       <Grid container spacing={3} justifyContent="center">
         {products.map((product) => (
-          <Grid item key={product.id}>
+          <Grid  key={product.id}>
             <ProductCard
               product={product}
             onAddToCart={(p) => {
