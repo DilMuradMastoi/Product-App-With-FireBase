@@ -9,9 +9,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-
-// Import your Firebase Auth setup
-import { auth } from './config/firebaseConfig';
+import { auth } from './config/firebaseconfig';
 
 // Import Redux Actions from your cartSlice
 import { setCart, clearCart } from './config/reduxconfig/reducers/cartSlice';
