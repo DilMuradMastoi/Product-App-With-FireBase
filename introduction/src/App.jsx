@@ -1,20 +1,11 @@
-// import { useEffect } from 'react';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { auth } from './config/firebaseconfig';
-// import { onAuthStateChanged, signOut } from 'firebase/auth';
-// import { setCart, clearCart } from './config/reduxconfig/reducers/cartSlice';
-// import { getUserCart, saveUserCart } from './config/cartService';
-
 
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './config/firebaseconfig';
-
 // Import Redux Actions from your cartSlice
 import { setCart, clearCart } from './config/reduxconfig/reducers/cartSlice';
 import Navbar from './components/Navbar';
-
 
 // Import Firestore Helper Functions
 import { getUserCart, saveUserCart } from './config/cartService';
