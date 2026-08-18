@@ -1,4 +1,4 @@
-import { db } from "./firebaseConfig";
+import { db } from "./firebaseconfig";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 // Save user's cart to Firestore
